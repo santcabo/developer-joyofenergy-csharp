@@ -23,29 +23,22 @@ namespace JOIEnergy.Controllers
         [HttpGet("compare-all/{smartMeterId}")]
         public ObjectResult CalculatedCostForEachPricePlan(string smartMeterId)
         {
-            var pricePlanId = _accountService.GetPricePlanIdForSmartMeterId(smartMeterId);
-            var costPerPricePlan = _pricePlanService.GetConsumptionCostOfElectricityReadingsForEachPricePlan(smartMeterId);
-            if (!costPerPricePlan.Any())
-            {
-                return new NotFoundObjectResult(string.Format("Smart Meter ID ({0}) not found", smartMeterId));
-            }
-
-            dynamic response = JObject.FromObject(costPerPricePlan);
+            var costPerPricePlan = this._pricePlanService.GetConsumptionCostOfElectricityReadingsForEachPricePlan(smartMeterId);
 
             return
                 costPerPricePlan.Any() ? 
-                new ObjectResult(response) : 
-                new NotFoundObjectResult(string.Format("Smart Meter ID ({0}) not found", smartMeterId));
+                new ObjectResult(JObject.FromObject(costPerPricePlan)) : 
+                new NotFoundObjectResult($"Smart Meter ID ({smartMeterId}) not found");
         }
 
         [HttpGet("recommend/{smartMeterId}")]
-        public ObjectResult RecommendCheapestPricePlans(string smartMeterId, int? limit = null) {
-            var consumptionForPricePlans = _pricePlanService.GetConsumptionCostOfElectricityReadingsForEachPricePlan(smartMeterId);
+        public ObjectResult RecommendCheapestPricePlans(string smartMeterId, int? limit = null) 
+        {
+            var consumptionForPricePlans = this._pricePlanService.GetConsumptionCostOfElectricityReadingsForEachPricePlan(smartMeterId);
 
-            if (!consumptionForPricePlans.Any()) {
-                return new NotFoundObjectResult(string.Format("Smart Meter ID ({0}) not found", smartMeterId));
-            }
-
+            if (!consumptionForPricePlans.Any())            
+                return new NotFoundObjectResult($"Smart Meter ID ({smartMeterId}) not found");
+            
             var recommendations = consumptionForPricePlans.OrderBy(pricePlanComparison => pricePlanComparison.Value);
 
             if (limit.HasValue && limit.Value < recommendations.Count())

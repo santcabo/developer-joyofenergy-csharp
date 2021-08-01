@@ -9,22 +9,19 @@ namespace JOIEnergy.Domain
     {
         public Supplier EnergySupplier { get; set; }
         public decimal UnitRate { get; set; }
-        public IList<PeakTimeMultiplier> PeakTimeMultiplier { get; set;}
+        public IDictionary<DayOfWeek, decimal> PeakTimeMultiplier { get; set; }
 
-        public decimal GetPrice(DateTime datetime) {
-            var multiplier = PeakTimeMultiplier.FirstOrDefault(m => m.DayOfWeek == datetime.DayOfWeek);
-
-            if (multiplier?.Multiplier != null) {
-                return multiplier.Multiplier * UnitRate;
-            } else {
-                return UnitRate;
-            }
+        public PricePlan(Supplier supplier, decimal unitRate, IDictionary<DayOfWeek, decimal> peakTimeMultiplier = null)
+        {
+            this.EnergySupplier = supplier;
+            this.UnitRate = unitRate;
+            this.PeakTimeMultiplier = peakTimeMultiplier ?? NoMultipliers();
         }
-    }
 
-    public class PeakTimeMultiplier
-    {
-        public DayOfWeek DayOfWeek { get; set; }
-        public decimal Multiplier { get; set; }
+        public decimal GetPrice(DateTime datetime) => this.PeakTimeMultiplier.TryGetValue(datetime.DayOfWeek, out decimal multiplier)
+                                                      ? multiplier * this.UnitRate
+                                                      : this.UnitRate;
+
+        public static IDictionary<DayOfWeek, decimal> NoMultipliers() => new Dictionary<DayOfWeek, decimal>();
     }
 }

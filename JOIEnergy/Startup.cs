@@ -17,44 +17,30 @@ namespace JOIEnergy
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
-        {
-            Configuration = configuration;
-        }
-
         public IConfiguration Configuration { get; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
+        public Startup(IConfiguration configuration)
+        {
+            this.Configuration = configuration;
+        }
+
+        // This method gets called by the runtime. Use this method to add services to the container (configure the app's services).
         public void ConfigureServices(IServiceCollection services)
         {
-            var readings =
-                GenerateMeterElectricityReadings();
-
-            var pricePlans = new List<PricePlan> {
-                new PricePlan{
-                    EnergySupplier = Enums.Supplier.DrEvilsDarkEnergy,
-                    UnitRate = 10m,
-                    PeakTimeMultiplier = new List<PeakTimeMultiplier>()
-                },
-                new PricePlan{
-                    EnergySupplier = Enums.Supplier.TheGreenEco,
-                    UnitRate = 2m,
-                    PeakTimeMultiplier = new List<PeakTimeMultiplier>()
-                },
-                new PricePlan{
-                    EnergySupplier = Enums.Supplier.PowerForEveryone,
-                    UnitRate = 1m,
-                    PeakTimeMultiplier = new List<PeakTimeMultiplier>()
-                }
-            };
+            var pricePlans = new Dictionary<Supplier, PricePlan>()
+                                            {
+                                                { Supplier.DrEvilsDarkEnergy, new PricePlan(supplier: Supplier.DrEvilsDarkEnergy, unitRate:10m)},
+                                                { Supplier.TheGreenEco, new PricePlan(supplier: Supplier.TheGreenEco, unitRate:2m)},
+                                                { Supplier.PowerForEveryone, new PricePlan(supplier: Supplier.PowerForEveryone, unitRate:1m)},
+                                            };
 
             services.AddMvc();
             services.AddTransient<IAccountService, AccountService>();
             services.AddTransient<IMeterReadingService, MeterReadingService>();
             services.AddTransient<IPricePlanService, PricePlanService>();
-            services.AddSingleton((IServiceProvider arg) => readings);
+            services.AddSingleton((IServiceProvider arg) => this.GenerateMeterElectricityReadings());
             services.AddSingleton((IServiceProvider arg) => pricePlans);
-            services.AddSingleton((IServiceProvider arg) => SmartMeterToPricePlanAccounts);
+            services.AddSingleton((IServiceProvider arg) => this.SmartMeterToPricePlanAccounts);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -68,30 +54,25 @@ namespace JOIEnergy
             app.UseMvc();
         }
 
-        private Dictionary<string, List<ElectricityReading>> GenerateMeterElectricityReadings() {
-            var readings = new Dictionary<string, List<ElectricityReading>>();
-            var generator = new ElectricityReadingGenerator();
-            var smartMeterIds = SmartMeterToPricePlanAccounts.Select(mtpp => mtpp.Key);
+        public Dictionary<string, Supplier> SmartMeterToPricePlanAccounts => new Dictionary<string, Supplier>
+                                            {
+                                                { "smart-meter-0", Supplier.DrEvilsDarkEnergy },
+                                                { "smart-meter-1", Supplier.TheGreenEco },
+                                                { "smart-meter-2", Supplier.DrEvilsDarkEnergy },
+                                                { "smart-meter-3", Supplier.PowerForEveryone },
+                                                { "smart-meter-4", Supplier.TheGreenEco }
+                                            };
 
-            foreach (var smartMeterId in smartMeterIds)
-            {
-                readings.Add(smartMeterId, generator.Generate(20));
-            }
-            return readings;
-        }
-
-        public Dictionary<String, Supplier> SmartMeterToPricePlanAccounts
+        /// <summary>
+        /// Generated ramdon readings for each "Smart Meter Id" already included in <id>SmartMeterToPricePlanAccounts</id>
+        /// </summary>
+        /// <returns></returns>
+        private Dictionary<string, List<ElectricityReading>> GenerateMeterElectricityReadings() 
         {
-            get
-            {
-                Dictionary<String, Supplier> smartMeterToPricePlanAccounts = new Dictionary<string, Supplier>();
-                smartMeterToPricePlanAccounts.Add("smart-meter-0", Supplier.DrEvilsDarkEnergy);
-                smartMeterToPricePlanAccounts.Add("smart-meter-1", Supplier.TheGreenEco);
-                smartMeterToPricePlanAccounts.Add("smart-meter-2", Supplier.DrEvilsDarkEnergy);
-                smartMeterToPricePlanAccounts.Add("smart-meter-3", Supplier.PowerForEveryone);
-                smartMeterToPricePlanAccounts.Add("smart-meter-4", Supplier.TheGreenEco);
-                return smartMeterToPricePlanAccounts;
-            }
+            var readings = new Dictionary<string, List<ElectricityReading>>();
+            this.SmartMeterToPricePlanAccounts.Keys.ToList().ForEach(smartMeterId => readings.Add(smartMeterId, ElectricityRamdonReadingGenerator.Generate(20)));
+
+            return readings;
         }
     }
 }

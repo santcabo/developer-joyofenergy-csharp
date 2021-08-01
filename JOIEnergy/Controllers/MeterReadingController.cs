@@ -17,30 +17,33 @@ namespace JOIEnergy.Controllers
 
         public MeterReadingController(IMeterReadingService meterReadingService)
         {
-            _meterReadingService = meterReadingService;
+            this._meterReadingService = meterReadingService;
         }
+
         // POST api/values
         [HttpPost ("store")]
         public ObjectResult Post([FromBody]MeterReadings meterReadings)
         {
-            if (!IsMeterReadingsValid(meterReadings)) {
+            if (!IsMeterReadingsValid(meterReadings)) 
                 return new BadRequestObjectResult("Internal Server Error");
-            }
-            _meterReadingService.StoreReadings(meterReadings.SmartMeterId,meterReadings.ElectricityReadings);
+            
+            this._meterReadingService.StoreReadings(meterReadings.SmartMeterId, meterReadings.ElectricityReadings);
             return new OkObjectResult("{}");
         }
 
         private bool IsMeterReadingsValid(MeterReadings meterReadings)
         {
-            String smartMeterId = meterReadings.SmartMeterId;
+            string smartMeterId = meterReadings.SmartMeterId;
             List<ElectricityReading> electricityReadings = meterReadings.ElectricityReadings;
-            return smartMeterId != null && smartMeterId.Any()
-                    && electricityReadings != null && electricityReadings.Any();
+            return  smartMeterId != null && 
+                    smartMeterId.Any() && 
+                    electricityReadings != null && 
+                    electricityReadings.Any();
         }
 
+        // GET api/values
         [HttpGet("read/{smartMeterId}")]
-        public ObjectResult GetReading(string smartMeterId) {
-            return new OkObjectResult(_meterReadingService.GetReadings(smartMeterId));
-        }
+        public ObjectResult GetReading(string smartMeterId) => new OkObjectResult(_meterReadingService.GetReadings(smartMeterId));
+        
     }
 }

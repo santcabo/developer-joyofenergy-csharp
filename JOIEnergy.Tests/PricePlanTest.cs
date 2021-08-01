@@ -12,31 +12,23 @@ namespace JOIEnergy.Tests
 
         public PricePlanTest()
         {
-            _pricePlan = new PricePlan
-            {
-                EnergySupplier = Supplier.TheGreenEco,
-                UnitRate = 20m,
-                PeakTimeMultiplier = new List<PeakTimeMultiplier> {
-                    new PeakTimeMultiplier { 
-                        DayOfWeek = DayOfWeek.Saturday,
-                        Multiplier = 2m
-                    },
-                    new PeakTimeMultiplier {
-                        DayOfWeek = DayOfWeek.Sunday,
-                        Multiplier = 10m
-                    }
-                }
-            };
+            this._pricePlan = new PricePlan(supplier: Supplier.TheGreenEco, unitRate: 20m, new Dictionary<DayOfWeek, decimal>()
+                                                                                                                                {
+                                                                                                                                    { DayOfWeek.Saturday, 2m },
+                                                                                                                                    { DayOfWeek.Sunday, 10m }
+                                                                                                                                });
         }
 
         [Fact]
-        public void TestGetEnergySupplier() {
-            Assert.Equal(Supplier.TheGreenEco, _pricePlan.EnergySupplier);
+        public void TestGetEnergySupplier() 
+        {
+            Assert.Equal(Supplier.TheGreenEco, this._pricePlan.EnergySupplier);
         }
 
         [Fact]
-        public void TestGetBasePrice() {
-            Assert.Equal(20m, _pricePlan.GetPrice(new DateTime(2018, 1, 2)));
+        public void TestGetBasePrice() 
+        {
+            Assert.Equal(20m, this._pricePlan.GetPrice(new DateTime(2018, 1, 2)));
         }
 
         [Fact]

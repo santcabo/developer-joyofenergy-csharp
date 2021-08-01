@@ -4,27 +4,28 @@ using JOIEnergy.Domain;
 
 namespace JOIEnergy.Generator
 {
-    public class ElectricityReadingGenerator
+    /// <summary>
+    ///  
+    /// </summary>
+    public static class ElectricityRamdonReadingGenerator
     {
-        public ElectricityReadingGenerator()
-        {
-
-        }
-        public List<ElectricityReading> Generate(int number)
+        public static List<ElectricityReading> Generate(int number)
         {
             var readings = new List<ElectricityReading>();
             var random = new Random();
-            for (int i = 0; i < number; i++)
+            var timeNow = DateTime.Now;
+
+            for (var i = number; i > 0; i--)
             {
                 var reading = (decimal)random.NextDouble();
                 var electricityReading = new ElectricityReading
                 {
                     Reading = reading,
-                    Time = DateTime.Now.AddSeconds(-i * 10)
+                    Time = timeNow.AddSeconds(-i * 10)
                 };
                 readings.Add(electricityReading);
             }
-            readings.Sort((reading1, reading2) => reading1.Time.CompareTo(reading2.Time));
+
             return readings;
         }
     }
